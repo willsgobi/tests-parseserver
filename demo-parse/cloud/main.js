@@ -107,13 +107,13 @@ Parse.Cloud.define("login", async (request) => {
 })
 
 Parse.Cloud.define("logout", async (request) => {
-  var query = new Parse.Query(Parse.Session)
-  query.equalTo("user", request.user)
-  var currentSession = await query.find({useMasterKey: true})
-  const session = new Session();
-  session.id = currentSession.id
-  
-  await session.destroy({ useMasterKey: true });
-  
-  return "deleted";
+  Parse.User.enableUnsafeCurrentUser();
+  Parse.User.logOut();
 })
+
+Parse.Cloud.afterLogout(async request => {
+  const { object: session }  = request;
+  const user = session.get('user');
+  user.set('city', "New York");
+  user.save(null, {useMasterKey:true});
+});
